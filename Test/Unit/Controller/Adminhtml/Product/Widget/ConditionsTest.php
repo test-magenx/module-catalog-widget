@@ -44,15 +44,11 @@ class ConditionsTest extends TestCase
      */
     protected $objectManager;
 
-    /**
-     * @inheritDoc
-     */
     protected function setUp(): void
     {
         $this->rule = $this->createMock(Rule::class);
         $this->response = $this->getMockBuilder(ResponseInterface::class)
-            ->onlyMethods(['sendResponse'])
-            ->addMethods(['setBody'])
+            ->setMethods(['setBody', 'sendResponse'])
             ->disableOriginalConstructor()
             ->getMockForAbstractClass();
         $this->response->expects($this->once())->method('setBody')->willReturnSelf();
@@ -74,30 +70,27 @@ class ConditionsTest extends TestCase
         );
     }
 
-    /**
-    * @return void
-    */
-    public function testExecute(): void
+    public function testExecute()
     {
         $type = 'Magento\CatalogWidget\Model\Rule\Condition\Product|attribute_set_id';
-        $this->request
-            ->method('getParam')
-            ->withConsecutive(['id'], ['type'], ['form'])
-            ->willReturnOnConsecutiveCalls('1--1', $type, 'request_form_param_value');
+        $this->request->expects($this->at(0))
+            ->method('getParam')->with('id')->willReturn('1--1');
+        $this->request->expects($this->at(1))
+            ->method('getParam')->with('type')->willReturn($type);
+        $this->request->expects($this->at(2))
+            ->method('getParam')->with('form')
+            ->willReturn('request_form_param_value');
 
         $condition = $this->getMockBuilder(Product::class)
-            ->onlyMethods(['asHtmlRecursive'])
-            ->addMethods(
-                [
-                    'setId',
-                    'setType',
-                    'setRule',
-                    'setPrefix',
-                    'setAttribute',
-                    'setJsFormObject'
-                ]
-            )
-            ->disableOriginalConstructor()
+            ->setMethods([
+                'setId',
+                'setType',
+                'setRule',
+                'setPrefix',
+                'setAttribute',
+                'asHtmlRecursive',
+                'setJsFormObject',
+            ])->disableOriginalConstructor()
             ->getMock();
         $condition->expects($this->once())
             ->method('setId')->with('1--1')->willReturnSelf();
